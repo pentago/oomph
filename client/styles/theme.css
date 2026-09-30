@@ -1,0 +1,56 @@
+/* Generated from THEMES[0] (Claude) in ../themes.ts: static fallback used before the JS theme engine runs and
+ * whenever the "Claude" theme is selected (nothing is overridden inline). client/theme.ts sets data-mode. */
+:root:root {
+  --bg-000: 0 0% 100%;
+  --bg-100: 48 33% 97%;
+  --bg-200: 47 27% 94%;
+  --bg-300: 46 23% 89%;
+  --text-100: 30 3% 12%;
+  --text-200: 38 2% 33%;
+  --text-300: 42 1% 50%;
+  --text-400: 44 2% 65%;
+  --text-500: 46 3% 75%;
+  --accent-brand: 15 54% 51%;
+  --accent-main-000: 15 52% 44%;
+  --accent-main-100: 15 54% 51%;
+  --accent-main-200: 15 54% 61%;
+  --accent-secondary-100: 210 51% 47%;
+  --success-100: 140 39% 40%;
+  --success-bg: 113 21% 91%;
+  --warning-100: 36 71% 42%;
+  --warning-bg: 38 46% 90%;
+  --danger-100: 0 56% 52%;
+  --danger-200: 0 56% 64%;
+  --danger-bg: 10 49% 92%;
+  --border-100: 47 8% 89%;
+  --border-200: 47 6% 85%;
+  --border-300: 46 4% 78%;
+  --oncolor-100: 0 0% 100%;
+}
+:root:root[data-mode="dark"] {
+  --bg-000: 240 2% 13%;
+  --bg-100: 240 2% 9%;
+  --bg-200: 240 3% 7%;
+  --bg-300: 220 3% 17%;
+  --text-100: 0 0% 93%;
+  --text-200: 240 0% 72%;
+  --text-300: 240 0% 55%;
+  --text-400: 240 0% 41%;
+  --text-500: 240 0% 31%;
+  --accent-brand: 15 63% 60%;
+  --accent-main-000: 15 41% 49%;
+  --accent-main-100: 15 63% 60%;
+  --accent-main-200: 15 63% 68%;
+  --accent-secondary-100: 207 58% 64%;
+  --success-100: 143 32% 57%;
+  --success-bg: 147 14% 17%;
+  --warning-100: 35 68% 62%;
+  --warning-bg: 34 25% 18%;
+  --danger-100: 358 73% 71%;
+  --danger-200: 358 73% 78%;
+  --danger-bg: 356 19% 20%;
+  --border-100: 240 1% 17%;
+  --border-200: 240 1% 21%;
+  --border-300: 240 1% 27%;
+  --oncolor-100: 0 0% 100%;
+}

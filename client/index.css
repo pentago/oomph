@@ -1,0 +1,302 @@
+@import "tailwindcss" source(none);
+@import "./styles/theme.css";
+@import "./styles/composer.css";
+@source "./";
+
+/* Colors come from styles/theme.css (HSL triplets, swapped by client/theme.ts); Tailwind utilities read them here. */
+@theme {
+  --color-bg-000: hsl(var(--bg-000));
+  --color-bg-100: hsl(var(--bg-100));
+  --color-bg-200: hsl(var(--bg-200));
+  --color-bg-300: hsl(var(--bg-300));
+  --color-text-100: hsl(var(--text-100));
+  --color-text-200: hsl(var(--text-200));
+  --color-text-300: hsl(var(--text-300));
+  --color-text-400: hsl(var(--text-400));
+  --color-text-500: hsl(var(--text-500));
+  --color-accent-brand: hsl(var(--accent-brand));
+  --color-accent-main-000: hsl(var(--accent-main-000));
+  --color-accent-main-100: hsl(var(--accent-main-100));
+  --color-accent-main-200: hsl(var(--accent-main-200));
+  --color-accent-secondary-100: hsl(var(--accent-secondary-100));
+  --color-success-100: hsl(var(--success-100));
+  --color-success-bg: hsl(var(--success-bg));
+  --color-warning-100: hsl(var(--warning-100));
+  --color-warning-bg: hsl(var(--warning-bg));
+  --color-danger-100: hsl(var(--danger-100));
+  --color-danger-200: hsl(var(--danger-200));
+  --color-danger-bg: hsl(var(--danger-bg));
+  --color-border-100: hsl(var(--border-100));
+  --color-border-200: hsl(var(--border-200));
+  --color-border-300: hsl(var(--border-300));
+  --color-oncolor-100: hsl(var(--oncolor-100));
+  --color-always-black: #000;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 4px 12px -2px rgb(0 0 0 / 0.12);
+
+  /* Fonts: client/theme.ts overrides --font-ui-sans / --font-chat / --font-mono (and --font-sidebar) inline. */
+  --font-ui-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-sans: var(--font-ui-sans);
+  --font-chat: Georgia, "Noto Serif", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+
+:root {
+  color-scheme: light;
+  --always-black: 0 0% 0%;
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --keyboard-inset-bottom: 0px;
+
+  /* Type scale in rem: the settings font-size slider changes <html> font-size and everything follows. */
+  --fs-xxs: 0.6875rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-lg: 1rem;
+  --fs-code: 0.8125rem;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: hsl(var(--bg-100));
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  padding: var(--safe-area-inset-top) var(--safe-area-inset-right) 0 var(--safe-area-inset-left);
+}
+
+/* Thin, unobtrusive scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border-300) / 0.6) transparent;
+}
+
+/* Floating surfaces (menus, dialogs): solid, like Claude's. */
+.glass,
+.glass-alt {
+  background-color: hsl(var(--bg-000));
+  border-color: hsl(var(--border-200) / 0.6);
+}
+
+.contain-content {
+  contain: content;
+}
+
+/* Top bar height incl. the phone safe area; shared by the sidebar header and the chat header. */
+.oomph-topbar {
+  box-sizing: border-box;
+  height: calc(3rem + var(--safe-area-inset-top, 0px));
+  padding-top: var(--safe-area-inset-top, 0px);
+}
+
+/* Streaming Markdown is rendered in stable/live chunks. Without this, Tailwind first:/last: margin utilities run per
+ * chunk root and make adjacent blocks too tight. Use DOM position so settled blocks need no isFirst/isLast props. */
+.markdown-content .markdown-stream-block:not(:first-child) > :first-child > :first-child {
+  margin-top: 1rem;
+}
+
+.markdown-content .markdown-stream-block:not(:last-child) > :last-child > :last-child {
+  margin-bottom: 1rem;
+}
+
+.markdown-content.text-\[length\:var\(--fs-sm\)\]
+  .markdown-stream-block:not(:first-child)
+  > :first-child
+  > :first-child {
+  margin-top: 0.5rem;
+}
+
+.markdown-content.text-\[length\:var\(--fs-sm\)\] .markdown-stream-block:not(:last-child) > :last-child > :last-child {
+  margin-bottom: 0.5rem;
+}
+
+/* Sanitized rich HTML keeps native semantics while matching the Markdown surface. */
+.markdown-content .markdown-html-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border-200) / 0.65);
+  border-radius: 6px;
+  background: hsl(var(--bg-100) / 0.45);
+}
+
+.markdown-content .markdown-html-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  color: hsl(var(--text-200));
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.markdown-content .markdown-html-table th,
+.markdown-content .markdown-html-table td {
+  min-width: 7rem;
+  padding: 0.625rem 0.75rem;
+  border-right: 1px solid hsl(var(--border-200) / 0.45);
+  border-bottom: 1px solid hsl(var(--border-200) / 0.45);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.markdown-content .markdown-html-table th:last-child,
+.markdown-content .markdown-html-table td:last-child {
+  border-right: 0;
+}
+
+.markdown-content .markdown-html-table tr:last-child > td {
+  border-bottom: 0;
+}
+
+.markdown-content .markdown-html-table th {
+  background: hsl(var(--bg-200) / 0.75);
+  color: hsl(var(--text-100));
+  font-weight: 600;
+}
+
+.markdown-content .markdown-html-table :is(th, td)[align="center"] {
+  text-align: center;
+}
+
+.markdown-content .markdown-html-table :is(th, td)[align="right"] {
+  text-align: right;
+}
+
+.markdown-content .markdown-html-table tbody tr:hover > td {
+  background: hsl(var(--bg-200) / 0.32);
+}
+
+.markdown-content .markdown-html-details {
+  max-width: 100%;
+  overflow: clip;
+  border: 1px solid hsl(var(--border-200) / 0.6);
+  border-radius: 6px;
+  background: hsl(var(--bg-100) / 0.35);
+}
+
+.markdown-content .markdown-html-summary {
+  cursor: pointer;
+  padding: 0.625rem 0.75rem;
+  color: hsl(var(--text-100));
+  font-weight: 600;
+  user-select: none;
+}
+
+.markdown-content .markdown-html-details[open] > .markdown-html-summary {
+  border-bottom: 1px solid hsl(var(--border-200) / 0.45);
+}
+
+.markdown-content .markdown-html-details > :not(.markdown-html-summary) {
+  margin-inline: 0.75rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: ported rule order; the higher-specificity match is a separate summary rule */
+.markdown-content .markdown-html-details > :last-child {
+  margin-bottom: 0.75rem;
+}
+
+.markdown-content .markdown-html-definition-list {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+}
+
+.markdown-content .markdown-html-definition-list dt {
+  color: hsl(var(--text-100));
+  font-weight: 600;
+}
+
+.markdown-content .markdown-html-definition-list dd {
+  margin: 0;
+  color: hsl(var(--text-300));
+}
+
+.markdown-content .markdown-html-summary:focus-visible {
+  outline: 2px solid hsl(var(--accent-main-100) / 0.7);
+  outline-offset: 2px;
+}
+
+@keyframes border-pulse {
+  0%,
+  100% {
+    border-color: hsl(var(--accent-main-100) / 0.5);
+  }
+  50% {
+    border-color: hsl(var(--accent-main-100) / 0.2);
+  }
+}
+
+@keyframes terminal-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes reasoning-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-border-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
+.reasoning-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--text-400)) 0%,
+    hsl(var(--text-300)) 35%,
+    hsl(var(--text-100)) 50%,
+    hsl(var(--text-300)) 65%,
+    hsl(var(--text-400)) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: reasoning-shimmer 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-border-pulse {
+    animation: none !important;
+  }
+
+  .reasoning-shimmer-text {
+    animation: none !important;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}

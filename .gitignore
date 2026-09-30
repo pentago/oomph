@@ -1,0 +1,15 @@
+# deps + build output (bun.lock stays tracked). dist/ is built by `prepack` and shipped only in the npm package.
+node_modules/
+dist/
+
+# secrets / local env
+.env
+.env.*
+
+# logs, caches, editors, OS
+*.log
+*.tsbuildinfo
+.DS_Store
+.idea/
+.vscode/
+*.swp

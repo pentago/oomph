@@ -1,0 +1,69 @@
+{
+  "name": "@dzhi/oomph",
+  "version": "0.1.0",
+  "description": "Minimal self-hosted web UI for the omp coding agent",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pentago/oomph.git"
+  },
+  "files": [
+    "server.ts",
+    "extension.ts",
+    "client/index.html",
+    "client/assets",
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bunx @tailwindcss/cli -i client/index.css -o dist/app.css --minify && bun build client/main.tsx --outfile dist/app.js --minify --define process.env.NODE_ENV='\"production\"' --define BUILD_STAMP=\"\\\"$(date '+%F %H:%M')\\\"\"",
+    "prepack": "bun run build",
+    "start": "bun server.ts",
+    "format": "biome check --write .",
+    "test": "bun test",
+    "check": "biome ci --error-on-warnings . && tsc --noEmit -p . && bun run build && bun test"
+  },
+  "omp": {
+    "extensions": [
+      "./extension.ts"
+    ],
+    "settings": {
+      "host": {
+        "type": "enum",
+        "values": [
+          "127.0.0.1",
+          "0.0.0.0"
+        ],
+        "default": "127.0.0.1",
+        "description": "127.0.0.1: this machine only (use a reverse proxy/tunnel to expose it). 0.0.0.0: every interface (LAN, VPN); plain HTTP unless you put TLS in front"
+      },
+      "port": {
+        "type": "number",
+        "default": 8788,
+        "min": 1,
+        "max": 65535,
+        "description": "Listen port"
+      },
+      "autostart": {
+        "type": "boolean",
+        "default": true,
+        "description": "Start the server with each interactive omp; it stops when the last one closes"
+      }
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/bun": "^1.4.2",
+    "dompurify": "^3.4.16",
+    "lucide-react": "^1.49.0",
+    "marked": "^18.0.14",
+    "morphdom": "^2.7.8",
+    "preact": "^10.29.8",
+    "shiki": "^4.4.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
+  }
+}

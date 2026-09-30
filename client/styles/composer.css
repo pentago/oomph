@@ -1,0 +1,21 @@
+/* Dock spacing: total bottom buffer = 1rem footer line + safe-area/keyboard overflow. */
+.oomph-composer {
+  padding-bottom: max(var(--keyboard-inset-bottom, 0px), max(0px, calc(var(--safe-area-inset-bottom, 0px) - 1rem)));
+}
+
+.oomph-composer textarea {
+  font-family: var(--font-ui-sans);
+  font-size: 1.125rem;
+  line-height: 1.55;
+  min-height: 1.75rem;
+  max-height: min(40dvh, 240px);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* iOS zooms into inputs below 16px. */
+@media (max-width: 767px) {
+  .oomph-composer textarea {
+    font-size: 16px;
+  }
+}
