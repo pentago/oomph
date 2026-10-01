@@ -2,8 +2,8 @@ import { AlertCircle } from "lucide-react";
 import { memo } from "preact/compat";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { UiMessage, UiPart } from "../../../shared";
+import { Logo } from "../Logo";
 import type { LiveTool } from "../props";
-import { Spark } from "../Spark";
 import { Chevron, Collapse } from "./Collapse";
 import { CopyButton } from "./CopyButton";
 import { useDisclosure } from "./disclosure";
@@ -231,7 +231,7 @@ export const AssistantRow = memo(
           </div>
         )}
         {latestInTurn && (
-          <Spark size={28} class={`mt-3 ${props.awaitingTools ? "animate-spin [animation-duration:3s]" : ""}`} />
+          <Logo size={28} class={`mt-3 ${props.awaitingTools ? "animate-spin [animation-duration:3s]" : ""}`} />
         )}
       </div>
     );

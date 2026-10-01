@@ -101,6 +101,7 @@ export type ClientMsg =
   | { t: "list" }
   | { t: "open"; cwd?: string; file?: string; key?: string }
   | { t: "prompt"; key: string; text: string; images?: UiImage[] }
+  | { t: "delete"; file: string }
   | { t: "abort"; key: string }
   | { t: "models"; key: string }
   | { t: "setModel"; key: string; provider: string; modelId: string }

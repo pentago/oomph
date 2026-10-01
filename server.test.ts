@@ -99,6 +99,43 @@ test("login, then the app, its files and the WebSocket work", async () => {
   ws.close();
 });
 
+test("deleting a chat removes its file and artifacts, and refuses paths outside the sessions dir", async () => {
+  const chat = join(dir, "agent", "sessions", "-p", "gone.jsonl");
+  const outside = join(dir, "agent", "sessions", "..", "keep.jsonl"); // passes a naive prefix check
+  await Bun.write(chat, `${JSON.stringify({ type: "session", id: "s2", cwd: dir })}\n`);
+  await Bun.write(join(dir, "agent", "sessions", "-p", "gone", "artifact.txt"), "x");
+  await Bun.write(join(dir, "agent", "keep.jsonl"), "x");
+
+  const cookie = ((await login(PASSWORD)).headers.get("set-cookie") ?? "").split(";")[0];
+  const ws = new BunWebSocket(`${base.replace("http", "ws")}/ws`, { headers: { cookie, origin: base } });
+  const inbox: { t: string; error?: string }[] = [];
+  const waiters: [(m: (typeof inbox)[number]) => boolean, () => void][] = [];
+  ws.onmessage = e => {
+    const m = JSON.parse(String(e.data));
+    inbox.push(m);
+    for (const [match, done] of waiters) if (match(m)) done();
+  };
+  const got = (match: (m: (typeof inbox)[number]) => boolean) => {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    if (inbox.some(match)) resolve();
+    else waiters.push([match, resolve]);
+    return promise;
+  };
+  const { promise: opened, resolve: onOpen } = Promise.withResolvers();
+  ws.onopen = onOpen;
+  await opened;
+
+  ws.send(JSON.stringify({ t: "delete", file: outside }));
+  await got(m => m.t === "error");
+  expect(existsSync(join(dir, "agent", "keep.jsonl"))).toBe(true);
+
+  ws.send(JSON.stringify({ t: "delete", file: chat }));
+  await got(m => m.t === "sessions");
+  expect(existsSync(chat)).toBe(false);
+  expect(existsSync(join(dir, "agent", "sessions", "-p", "gone"))).toBe(false);
+  ws.close();
+});
+
 test("lifeline: oomph stays up while any omp holds it and stops when the last one lets go", async () => {
   const socket = join(dir, "lifeline.sock");
   await Bun.write(join(dir, "cfg2", "password"), "unused"); // the server refuses to start without one

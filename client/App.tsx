@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { ServerMsg, UiCommand, UiEvent, UiMessage, UiModel, UiSession, UiState } from "../shared";
 import { Composer } from "./components/Composer";
 import { Header } from "./components/Header";
+import { Logo } from "./components/Logo";
 import { MessageList } from "./components/messages/MessageList";
 import type { LiveTool } from "./components/props";
 import { Sidebar } from "./components/Sidebar";
-import { Spark } from "./components/Spark";
 
 type Active = { key: string; file?: string; cwd: string };
 
@@ -154,6 +154,12 @@ export function App() {
     send({ t: "open", file: item?.file, cwd: item ? item.cwd : newCwd || cwds[0] });
   };
 
+  // Deleting removes the chat file from omp itself, not just from this list; the row asks for confirmation first.
+  const remove = (item: UiSession) => {
+    send({ t: "delete", file: item.file });
+    if (item.file === activeRef.current?.file) open();
+  };
+
   // Focusing the composer with no chat open starts a new one; guard so focus + send can't double-open.
   const openNew = () => {
     if (activeRef.current || starting.current) return;
@@ -182,6 +188,7 @@ export function App() {
         open={drawer}
         collapsed={collapsed}
         onOpen={open}
+        onDelete={remove}
         onNew={() => open()}
         onSelectCwd={setNewCwd}
         onToggleCollapse={() => setCollapsed(c => !c)}
@@ -198,7 +205,7 @@ export function App() {
           <>
             <div class="flex-1" />
             <div class="mb-6 flex flex-col items-center gap-4 px-4">
-              <Spark size={40} />
+              <Logo size={40} />
               <h1 class="text-center font-[family-name:var(--font-chat)] text-[2.25rem] leading-tight text-text-100">
                 What are we working on?
               </h1>

@@ -272,7 +272,13 @@ export function Sidebar(p: SidebarProps) {
               ) : (
                 <div class="flex flex-col gap-px">
                   {visible.map(i => (
-                    <SessionRow key={i.file} item={i} selected={i.file === p.activeFile} onOpen={p.onOpen} />
+                    <SessionRow
+                      key={i.file}
+                      item={i}
+                      selected={i.file === p.activeFile}
+                      onOpen={p.onOpen}
+                      onDelete={p.onDelete}
+                    />
                   ))}
                 </div>
               )}

@@ -1,8 +1,8 @@
 import { ArrowDown } from "lucide-react";
 import { useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { UiMessage } from "../../../shared";
+import { Logo } from "../Logo";
 import type { LiveTool, MessageListProps } from "../props";
-import { Spark } from "../Spark";
 import { AssistantRow, type AssistantRowProps, NoteRow, UserRow } from "./MessageRows";
 import type { ToolMsg } from "./tools";
 
@@ -182,7 +182,7 @@ export function MessageList({ msgs, liveTools, busy }: MessageListProps) {
           ))}
           {busy && items.at(-1)?.kind === "user" && (
             <div class={`w-full max-w-[44rem] mx-auto ${pxClass} py-4`}>
-              <Spark size={28} class="animate-spin [animation-duration:3s]" />
+              <Logo size={28} class="animate-spin [animation-duration:3s]" />
             </div>
           )}
         </div>
