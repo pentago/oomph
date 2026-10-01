@@ -4,6 +4,8 @@ A small web client for with [omp](https://github.com/can1357/oh-my-pi), the codi
 
 It is an omp plugin. Install it once, and omp can start and stop it for you.
 
+![oomph in the browser](static/screenshot.png)
+
 ## What you get
 
 - Your omp chats in the browser, with the same history you see in the terminal.
