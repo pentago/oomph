@@ -2,8 +2,8 @@ import { ChevronDown, LogOut, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { createPortal } from "react-dom";
 import type { UiState } from "../../../shared";
+import { Logo } from "../Logo";
 import { SettingsDialog } from "../SettingsDialog";
-import { Spark } from "../Spark";
 
 const formatCost = (cost: number) => (cost > 0 && cost < 0.01 ? "<$0.01" : `$${cost.toFixed(2)}`);
 
@@ -79,7 +79,7 @@ export function SidebarFooter({ showLabels, state, cost, online }: Props) {
           style={{ width: showLabels ? "100%" : 32 }}
         >
           <span class="relative flex size-6 shrink-0 items-center justify-center rounded-md bg-bg-300">
-            <Spark size={14} />
+            <Logo size={14} />
             <span
               class={`absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-bg-200 ${online ? "bg-success-100" : "bg-danger-100"}`}
             />

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { ServerMsg, UiCommand, UiEvent, UiMessage, UiModel, UiSession, UiState } from "../shared";
 import { Composer } from "./components/Composer";
 import { Header } from "./components/Header";
+import { Logo } from "./components/Logo";
 import { MessageList } from "./components/messages/MessageList";
 import type { LiveTool } from "./components/props";
 import { Sidebar } from "./components/Sidebar";
-import { Spark } from "./components/Spark";
 
 type Active = { key: string; file?: string; cwd: string };
 
@@ -198,7 +198,7 @@ export function App() {
           <>
             <div class="flex-1" />
             <div class="mb-6 flex flex-col items-center gap-4 px-4">
-              <Spark size={40} />
+              <Logo size={40} />
               <h1 class="text-center font-[family-name:var(--font-chat)] text-[2.25rem] leading-tight text-text-100">
                 What are we working on?
               </h1>
