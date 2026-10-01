@@ -20,6 +20,7 @@ export type SidebarProps = {
   open: boolean; // mobile drawer is open
   collapsed: boolean; // desktop sidebar is collapsed
   onOpen: (item: UiSession) => void;
+  onDelete: (item: UiSession) => void;
   onNew: () => void;
   onSelectCwd: (cwd: string) => void;
   onToggleCollapse: () => void;

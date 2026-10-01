@@ -154,6 +154,12 @@ export function App() {
     send({ t: "open", file: item?.file, cwd: item ? item.cwd : newCwd || cwds[0] });
   };
 
+  // Deleting removes the chat file from omp itself, not just from this list; the row asks for confirmation first.
+  const remove = (item: UiSession) => {
+    send({ t: "delete", file: item.file });
+    if (item.file === activeRef.current?.file) open();
+  };
+
   // Focusing the composer with no chat open starts a new one; guard so focus + send can't double-open.
   const openNew = () => {
     if (activeRef.current || starting.current) return;
@@ -182,6 +188,7 @@ export function App() {
         open={drawer}
         collapsed={collapsed}
         onOpen={open}
+        onDelete={remove}
         onNew={() => open()}
         onSelectCwd={setNewCwd}
         onToggleCollapse={() => setCollapsed(c => !c)}

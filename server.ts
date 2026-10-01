@@ -8,9 +8,9 @@
 // proxy; a DNS-rebinding page gets no cookie and can only guess passwords against the login backoff.
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { chmodSync, rmSync } from "node:fs";
-import { chmod, mkdir, readdir, stat } from "node:fs/promises";
+import { chmod, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { ServerWebSocket, Subprocess } from "bun";
 import type { ClientMsg, UiCommand, UiMessage, UiModel, UiPart, UiState } from "./shared";
 
@@ -441,7 +441,20 @@ async function probeDefaultModel(): Promise<void> {
   return defaultProbe;
 }
 
-const isSessionFile = (file: string) => file.startsWith(`${SESSIONS_DIR}/`) && file.endsWith(".jsonl");
+// resolve(): a `..` segment must not let a path pass the prefix check while pointing outside SESSIONS_DIR.
+const isSessionFile = (file: string) =>
+  resolve(file) === file && file.startsWith(`${SESSIONS_DIR}/`) && file.endsWith(".jsonl");
+
+async function sessionsMsg() {
+  await probeDefaultModel(); // once per server start: lets the composer show a model before any chat
+  const items = await listSessions();
+  return {
+    t: "sessions",
+    items,
+    cwds: [...new Set([homedir(), ...items.map(i => i.cwd).filter(Boolean)])],
+    defaultModel,
+  };
+}
 
 // Socket writes can be partial when the kernel buffer is full (a big message or tool result); queue the rest and
 // finish it on `drain`, or the terminal would get a cut-off JSON line.
@@ -840,14 +853,20 @@ Bun.serve({
       const reply = (o: object) => ws.send(JSON.stringify(o));
       try {
         if (m.t === "list") {
-          await probeDefaultModel(); // once per server start: lets the composer show a model before any chat
-          const items = await listSessions();
-          reply({
-            t: "sessions",
-            items,
-            cwds: [...new Set([homedir(), ...items.map(i => i.cwd).filter(Boolean)])],
-            defaultModel,
-          });
+          reply(await sessionsMsg());
+        } else if (m.t === "delete") {
+          if (typeof m.file !== "string" || !isSessionFile(m.file)) throw new Error("bad session file");
+          if (claims.has(m.file)) throw new Error("this chat is open in a terminal omp; close it there first");
+          for (const s of [...sessions.values()]) {
+            if (s.file !== m.file) continue;
+            s.proc?.kill();
+            await s.proc?.exited; // no omp may still be appending when the file goes
+            sessions.delete(s.key);
+          }
+          await rm(m.file, { force: true });
+          await rm(m.file.slice(0, -".jsonl".length), { recursive: true, force: true }); // omp's artifacts dir for the chat
+          metaCache.delete(m.file);
+          reply(await sessionsMsg());
         } else if (m.t === "open") {
           const s = await openSession(m.cwd ?? homedir(), m.file, m.key);
           s.subs.add(ws);
