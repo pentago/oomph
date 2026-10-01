@@ -115,6 +115,8 @@ Everything lives in `~/.config/oomph/`:
 - `server.log`: messages from the last start. Look here if `/oomph start` fails.
 - `pid` and `lifeline.sock`: only there while oomph runs. omp uses them to find oomph and keep it running.
 
+Files you attach in the chat are saved in `~/.local/share/oomph/uploads/` so older chats can still find them. oomph never deletes them; remove files there yourself when you no longer need them.
+
 Your chats are not stored by oomph. They are omp's own chat files in `~/.omp/agent/sessions/`.
 
 ## Troubleshooting

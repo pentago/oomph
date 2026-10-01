@@ -821,10 +821,11 @@ Bun.serve({
       if (!(file instanceof File) || file.size === 0) return text("bad upload", 400);
       if (file.size > 64 * 1024 * 1024) return text("too big (max 64 MB)", 413);
       const safe = file.name.replaceAll(/[/\0]/g, "_").slice(-120) || "upload";
-      const dir = join(homedir(), ".cache", "oomph", "uploads");
+      const dir = join(homedir(), ".local", "share", "oomph", "uploads");
       await mkdir(dir, { recursive: true, mode: 0o700 });
       const path = join(dir, `${crypto.randomUUID().slice(0, 8)}-${safe}`);
-      await Bun.write(path, file, { mode: 0o600 });
+      await Bun.write(path, file);
+      await chmod(path, 0o600); // Bun.write's `mode` option left it 0644
       return new Response(JSON.stringify({ path }), {
         headers: { ...secure, "content-type": "application/json" },
       });
