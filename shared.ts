@@ -95,6 +95,8 @@ export type ServerMsg =
     }
   | { t: "ev"; key: string; ev: UiEvent }
   | { t: "models"; items: UiModel[] }
+  | { t: "term"; id: string; data: string } // shell output
+  | { t: "termExit"; id: string } // that shell ended
   | { t: "error"; error: string };
 
 export type ClientMsg =
@@ -103,6 +105,10 @@ export type ClientMsg =
   | { t: "prompt"; key: string; text: string; images?: UiImage[] }
   | { t: "delete"; file: string }
   | { t: "abort"; key: string }
+  | { t: "termOpen"; id: string; cwd?: string; cols: number; rows: number }
+  | { t: "termIn"; id: string; data: string }
+  | { t: "termResize"; id: string; cols: number; rows: number }
+  | { t: "termClose"; id: string }
   | { t: "models"; key: string }
   | { t: "setModel"; key: string; provider: string; modelId: string }
   | { t: "setThinking"; key: string; level: string };

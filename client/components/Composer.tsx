@@ -1,4 +1,4 @@
-import { ArrowUp, Check, FileText, Plus, Sparkles, Square, X } from "lucide-react";
+import { ArrowUp, Check, FileText, Plus, Sparkles, Square, Terminal, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { createPortal } from "react-dom";
 import type { UiImage } from "../../shared";
@@ -26,6 +26,8 @@ export function Composer({
   onSetThinking,
   onRequestModels,
   onSetModel,
+  terminalOpen,
+  onToggleTerminal,
 }: ComposerProps) {
   const [text, setText] = useState("");
   const [atts, setAtts] = useState<Att[]>([]);
@@ -315,6 +317,18 @@ export function Composer({
                 {current ? label(current) : "Default"}
               </button>
             )}
+            <button
+              type="button"
+              aria-label="Toggle terminal"
+              aria-pressed={terminalOpen}
+              title="Terminal"
+              onClick={onToggleTerminal}
+              class={`inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-bg-200 hover:text-text-100 ${
+                terminalOpen ? "text-text-100" : "text-text-400"
+              }`}
+            >
+              <Terminal size={16} aria-hidden="true" />
+            </button>
             {!canSend && busy ? (
               <button
                 type="button"

@@ -45,7 +45,7 @@ async function boot(env: Record<string, string> = {}) {
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "oomph-test-"));
   await Bun.write(join(dir, "cfg", "password"), await Bun.password.hash(PASSWORD));
-  ({ proc: server, base } = await boot());
+  ({ proc: server, base } = await boot({ SHELL: "/bin/sh" })); // the terminal test must not depend on a user's shell rc
 });
 
 afterAll(async () => {
@@ -99,16 +99,11 @@ test("login, then the app, its files and the WebSocket work", async () => {
   ws.close();
 });
 
-test("deleting a chat removes its file and artifacts, and refuses paths outside the sessions dir", async () => {
-  const chat = join(dir, "agent", "sessions", "-p", "gone.jsonl");
-  const outside = join(dir, "agent", "sessions", "..", "keep.jsonl"); // passes a naive prefix check
-  await Bun.write(chat, `${JSON.stringify({ type: "session", id: "s2", cwd: dir })}\n`);
-  await Bun.write(join(dir, "agent", "sessions", "-p", "gone", "artifact.txt"), "x");
-  await Bun.write(join(dir, "agent", "keep.jsonl"), "x");
-
+// A logged-in browser socket with a promise-style wait for the first message matching a predicate.
+async function browserWs() {
   const cookie = ((await login(PASSWORD)).headers.get("set-cookie") ?? "").split(";")[0];
   const ws = new BunWebSocket(`${base.replace("http", "ws")}/ws`, { headers: { cookie, origin: base } });
-  const inbox: { t: string; error?: string }[] = [];
+  const inbox: { t: string; id?: string; error?: string; data?: string }[] = [];
   const waiters: [(m: (typeof inbox)[number]) => boolean, () => void][] = [];
   ws.onmessage = e => {
     const m = JSON.parse(String(e.data));
@@ -124,6 +119,17 @@ test("deleting a chat removes its file and artifacts, and refuses paths outside 
   const { promise: opened, resolve: onOpen } = Promise.withResolvers();
   ws.onopen = onOpen;
   await opened;
+  return { ws, got, inbox };
+}
+
+test("deleting a chat removes its file and artifacts, and refuses paths outside the sessions dir", async () => {
+  const chat = join(dir, "agent", "sessions", "-p", "gone.jsonl");
+  const outside = join(dir, "agent", "sessions", "..", "keep.jsonl"); // passes a naive prefix check
+  await Bun.write(chat, `${JSON.stringify({ type: "session", id: "s2", cwd: dir })}\n`);
+  await Bun.write(join(dir, "agent", "sessions", "-p", "gone", "artifact.txt"), "x");
+  await Bun.write(join(dir, "agent", "keep.jsonl"), "x");
+
+  const { ws, got } = await browserWs();
 
   ws.send(JSON.stringify({ t: "delete", file: outside }));
   await got(m => m.t === "error");
@@ -134,6 +140,52 @@ test("deleting a chat removes its file and artifacts, and refuses paths outside 
   expect(existsSync(chat)).toBe(false);
   expect(existsSync(join(dir, "agent", "sessions", "-p", "gone"))).toBe(false);
   ws.close();
+});
+
+test("browser terminals: shells in one connection are independent, `exit` ends one, closing the socket ends the rest", async () => {
+  const { ws, got, inbox } = await browserWs();
+  const text = (id: string) =>
+    inbox
+      .filter(m => m.id === id)
+      .map(m => m.data ?? "")
+      .join("");
+  const pid = (id: string) => Number(/shell-pid=(\d+)/.exec(text(id))?.[1]);
+  const alive = (p: number) => {
+    try {
+      process.kill(p, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const send = (o: object) => ws.send(JSON.stringify(o));
+  // Polling: the shells are the server's children, so there is no event for their death to await from here.
+  const gone = async (p: number) => {
+    for (let i = 0; i < 40 && alive(p); i++) await Bun.sleep(50);
+    return !alive(p);
+  };
+  for (const id of ["a", "b", "c"]) {
+    send({ t: "termOpen", id, cwd: dir, cols: 80, rows: 24 });
+    send({ t: "termIn", id, data: `echo $((6*7))-${id}; echo shell-pid=$$; pwd\n` });
+  }
+  await got(() => ["a", "b", "c"].every(id => pid(id) > 0) && text("a").includes(dir));
+  expect(new Set(["a", "b", "c"].map(pid)).size).toBe(3);
+  expect(pid("a")).not.toBe(pid("b"));
+  expect(text("a")).toContain("42-a");
+  expect(text("a")).not.toContain("42-b"); // input only reaches its own shell
+  expect(text("a")).toContain(dir); // started in the requested cwd
+
+  send({ t: "termIn", id: "a", data: "exit\n" });
+  await got(m => m.t === "termExit" && m.id === "a");
+  expect(inbox.some(m => m.t === "termExit" && m.id === "b")).toBe(false);
+  expect(alive(pid("b"))).toBe(true);
+  // `termClose` (a tab's x) ends just that shell, by hanging it up rather than waiting for `exit`.
+  send({ t: "termClose", id: "c" });
+  expect(await gone(pid("c"))).toBe(true);
+  expect(alive(pid("b"))).toBe(true);
+
+  ws.close(); // no `exit`: the server must hang the remaining shell up itself
+  expect(await gone(pid("b"))).toBe(true);
 });
 
 test("lifeline: oomph stays up while any omp holds it and stops when the last one lets go", async () => {

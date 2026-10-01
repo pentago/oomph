@@ -6,6 +6,7 @@ import { Logo } from "./components/Logo";
 import { MessageList } from "./components/messages/MessageList";
 import type { LiveTool } from "./components/props";
 import { Sidebar } from "./components/Sidebar";
+import { TerminalPanel } from "./components/TerminalPanel";
 
 type Active = { key: string; file?: string; cwd: string };
 
@@ -54,6 +55,10 @@ export function App() {
   const activeRef = useRef<Active | null>(null);
   activeRef.current = active;
   const starting = useRef(false);
+  const termSink = useRef<((m: ServerMsg) => void) | null>(null);
+  const [termLive, setTermLive] = useState(false); // a shell exists (panel mounted, maybe hidden)
+  const [termOn, setTermOn] = useState(false); // panel visible
+  const [conn, setConn] = useState(0); // bumps on every WebSocket open
 
   // A send during a reconnect window (server restart, phone waking up) must not vanish: queue and flush on open.
   // Queued opens replace older queued opens so only the latest clicked chat is ever opened.
@@ -77,6 +82,7 @@ export function App() {
       ws.current = w;
       w.onopen = () => {
         setOnline(true);
+        setConn(c => c + 1); // a shell dies with its socket, so the terminal restarts after a reconnect
         const out = outbox.current;
         outbox.current = [];
         const opened = out.some(m => "t" in m && m.t === "open");
@@ -104,6 +110,8 @@ export function App() {
           setBusy(m.streaming);
           setCommands(m.commands);
           w.send(JSON.stringify({ t: "list" }));
+        } else if (m.t === "term" || m.t === "termExit") {
+          termSink.current?.(m);
         } else if (m.t === "models") {
           setModels(m.items);
         } else if (m.t === "ev" && m.key === activeRef.current?.key) {
@@ -227,8 +235,27 @@ export function App() {
           onSetThinking={level => active && send({ t: "setThinking", key: active.key, level })}
           onRequestModels={() => active && send({ t: "models", key: active.key })}
           onSetModel={(provider, modelId) => active && send({ t: "setModel", key: active.key, provider, modelId })}
+          terminalOpen={termOn}
+          onToggleTerminal={() => {
+            setTermLive(true);
+            setTermOn(on => !on);
+          }}
         />
         {welcome && <div class="hidden flex-[1.4] md:block" />}
+        {termLive && (
+          <TerminalPanel
+            key={conn}
+            cwd={active?.cwd ?? cwds[0] ?? ""}
+            visible={termOn}
+            send={send}
+            sink={termSink}
+            onHide={() => setTermOn(false)}
+            onExit={() => {
+              setTermLive(false);
+              setTermOn(false);
+            }}
+          />
+        )}
       </main>
     </div>
   );
