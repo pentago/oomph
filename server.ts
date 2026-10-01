@@ -779,6 +779,15 @@ const text = (body: string, status: number) => new Response(body, { status, head
 const asset = (path: string, type: string) =>
   new Response(Bun.file(join(import.meta.dir, path)), { headers: { ...secure, "content-type": type } });
 
+// Files the browser fetches without the login cookie (manifest, service worker, icons); nothing private in them.
+const PWA_FILES: Record<string, [string, string]> = {
+  "/manifest.webmanifest": ["manifest.webmanifest", "application/manifest+json"],
+  "/sw.js": ["sw.js", "text/javascript"],
+  "/assets/icon.svg": ["icon.svg", "image/svg+xml"],
+  "/assets/icon-192.png": ["icon-192.png", "image/png"],
+  "/assets/icon-512.png": ["icon-512.png", "image/png"],
+};
+
 // The 1.2 MB bundle is re-fetched on every phone load, so gzip it (once per build) and let the browser revalidate
 // with an ETag instead of `no-store`: unchanged loads cost a 304, changed ones a compressed download.
 const gzCache = new Map<string, { mtime: number; body: Uint8Array<ArrayBuffer>; etag: string }>();
@@ -857,6 +866,8 @@ Bun.serve({
       const exp = String(Date.now() + SESSION_MS);
       return redirect("/", `${COOKIE}=${exp}.${await sign(exp)}; ${cookieFlags}; Max-Age=${SESSION_MS / 1000}`);
     }
+    const pwa = PWA_FILES[url.pathname];
+    if (pwa) return asset(`client/assets/${pwa[0]}`, pwa[1]);
     if (!(await authed(req))) return url.pathname === "/" ? redirect("/login") : text("unauthorized", 401);
     if (url.pathname === "/logout" && req.method === "POST") {
       return redirect("/login", `${COOKIE}=; ${cookieFlags}; Max-Age=0`);

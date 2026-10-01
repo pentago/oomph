@@ -74,6 +74,12 @@ test("app files need a login", async () => {
   expect((await fetch(base, { redirect: "manual" })).headers.get("location")).toBe("/login");
 });
 
+test("install files load without a login (the browser fetches them without the cookie)", async () => {
+  for (const path of ["/manifest.webmanifest", "/sw.js", "/assets/icon-192.png", "/assets/icon-512.png"]) {
+    expect((await fetch(`${base}${path}`)).status).toBe(200);
+  }
+});
+
 test("login, then the app, its files and the WebSocket work", async () => {
   const res = await login(PASSWORD);
   expect(res.status).toBe(303);
