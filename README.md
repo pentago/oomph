@@ -1,10 +1,12 @@
 # oomph
 
-A small web client for [omp](https://github.com/can1357/oh-my-pi), the coding agent, in your browser. You can use it from your laptop, phone or tablet.
+A small web client for [omp](https://github.com/can1357/oh-my-pi), the coding agent, in your browser. You can use it from your laptop, phone, tablet, from a toilet, bus or your bed.
 
 It is an omp plugin. Install it once, and omp can start and stop it for you.
 
-![oomph in the browser](static/screenshot.png)
+Very much **WIP** but it works decent and will get you places.
+
+![oomph in the browser](static/oomph-web-ui-screenshot.png)
 
 ## What you get
 
@@ -12,6 +14,8 @@ It is an omp plugin. Install it once, and omp can start and stop it for you.
 - New chats in any folder, and pick up any old chat where you left off.
 - Replies appear as they are written, and you can see the agent's tool steps.
 - Switch the model and the thinking level.
+- A terminal at the bottom of the page: click the `>_` button next to the thinking level. It opens a shell in the chat's folder, with tabs (the + button) and a split button to put two terminals side by side. Drag its top edge to make it taller or shorter, or use the arrow at the right to hide it (your terminals keep running). It uses your system's monospace font and the same environment omp was started in.
+- Delete a chat you no longer need: hover it in the sidebar, click the trash icon, then click "Delete?" to confirm. It is removed from omp too, so it is gone from the terminal as well. A chat that is open in an omp window can't be deleted until you close it there.
 - A login page with a password, so only you can use it.
 - A clean look: A settings page (bottom of the sidebar) has light/dark mode, a dozen popular color themes, separate fonts for the interface, sidebar, replies and code, and a font size slider. Fonts come from Google by default, so the browser needs internet for them; without internet the system fonts are used. Settings are saved per browser.
 
@@ -103,6 +107,7 @@ oomph doesn't care which one you pick. Use what you already have.
 oomph can run commands on your computer through the agent. Treat it like a remote login.
 
 - Keep the password secret. `/oomph passwd` changes it and signs everyone out.
+- The terminal is a normal shell running as you, so anyone who can log in to oomph can run anything you can.
 - oomph itself uses plain `http`, which is not encrypted. On `0.0.0.0` that's fine on a private network (Tailscale, WireGuard, home Wi-Fi you trust). Don't open the port to the public internet. If you need access from outside, use a tunnel or web server that gives you `https`.
 - Too many wrong passwords make the login wait longer before the next try.
 
