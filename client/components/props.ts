@@ -52,4 +52,6 @@ export type ComposerProps = {
   onSetThinking: (level: string) => void;
   onRequestModels: () => void; // call when the model dropdown opens
   onSetModel: (provider: string, modelId: string) => void;
+  terminalOpen: boolean;
+  onToggleTerminal: () => void;
 };

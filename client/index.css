@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @import "./styles/theme.css";
 @import "./styles/composer.css";
+@import "@xterm/xterm/css/xterm.css";
 @source "./";
 
 /* Colors come from styles/theme.css (HSL triplets, swapped by client/theme.ts); Tailwind utilities read them here. */

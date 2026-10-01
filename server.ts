@@ -7,7 +7,7 @@
 // forgery against this bash-capable server). There is no Host allowlist, so the server works under any name, IP or
 // proxy; a DNS-rebinding page gets no cookie and can only guess passwords against the login backoff.
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { chmodSync, rmSync } from "node:fs";
+import { chmodSync, rmSync, statSync } from "node:fs";
 import { chmod, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -707,11 +707,64 @@ setInterval(() => {
 
 function shutdown() {
   for (const s of sessions.values()) s.proc?.kill(); // don't leave omp children behind
+  for (const ws of terms.keys()) termKill(ws);
   rmSync(PID_FILE, { force: true });
   if (LIFELINE) rmSync(LIFELINE, { force: true });
   process.exit(0);
 }
 for (const sig of ["SIGTERM", "SIGINT"] as const) process.on(sig, shutdown);
+
+// ---- browser terminal ------------------------------------------------------------------------
+
+// ponytail: shells belong to their browser connection and die with its socket (no reattach after a reconnect), and
+// output isn't flow-controlled; a per-chat registry with scrollback replay would fix the first, ws backpressure the
+// second. The client names each shell (tab pane) with an id.
+const terms = new Map<ServerWebSocket<unknown>, Map<string, Subprocess>>();
+const MAX_TERMS = 16; // shells per connection
+const dim = (n: unknown) => Math.min(1000, Math.max(1, Math.trunc(Number(n)) || 80));
+
+// Synchronous on purpose: messages are handled concurrently, so an `await` here would let the first keystrokes
+// (sent right after `termOpen`) arrive before the shell exists and get dropped.
+function termOpen(ws: ServerWebSocket<unknown>, m: Extract<ClientMsg, { t: "termOpen" }>) {
+  const mine = terms.get(ws) ?? new Map<string, Subprocess>();
+  const id = m.id;
+  if (typeof id !== "string" || id.length > 32 || mine.has(id) || mine.size >= MAX_TERMS) return;
+  const cwd =
+    typeof m.cwd === "string" && statSync(m.cwd, { throwIfNoEntry: false })?.isDirectory() ? m.cwd : homedir();
+  const env: Record<string, string | undefined> = { ...process.env, TERM: "xterm-256color" };
+  delete env.OOMPH_LIFELINE; // a `bun server.ts` typed into this shell must not join the plugin's lifeline
+  const dec = new TextDecoder(); // streaming: a multi-byte character can straddle two chunks
+  const proc = Bun.spawn([process.env.SHELL || "/bin/sh"], {
+    cwd,
+    env,
+    terminal: {
+      cols: dim(m.cols),
+      rows: dim(m.rows),
+      data: (_t, bytes) => ws.send(JSON.stringify({ t: "term", id, data: dec.decode(bytes, { stream: true }) })),
+    },
+  });
+  mine.set(id, proc);
+  terms.set(ws, mine);
+  void proc.exited.then(() => {
+    if (mine.get(id) !== proc) return;
+    mine.delete(id);
+    ws.send(JSON.stringify({ t: "termExit", id }));
+  });
+}
+
+// One shell by id, or all of this connection's. Interactive shells ignore SIGTERM; closing the pty hangs up the
+// shell and whatever it is running.
+function termKill(ws: ServerWebSocket<unknown>, id?: string) {
+  const mine = terms.get(ws);
+  if (!mine) return;
+  for (const [key, proc] of mine) {
+    if (id !== undefined && key !== id) continue;
+    mine.delete(key);
+    proc.terminal?.close();
+    proc.kill("SIGHUP");
+  }
+  if (!mine.size) terms.delete(ws);
+}
 
 // ---- http / websocket ------------------------------------------------------------------------
 
@@ -821,10 +874,11 @@ Bun.serve({
       if (!(file instanceof File) || file.size === 0) return text("bad upload", 400);
       if (file.size > 64 * 1024 * 1024) return text("too big (max 64 MB)", 413);
       const safe = file.name.replaceAll(/[/\0]/g, "_").slice(-120) || "upload";
-      const dir = join(homedir(), ".cache", "oomph", "uploads");
+      const dir = join(homedir(), ".local", "share", "oomph", "uploads");
       await mkdir(dir, { recursive: true, mode: 0o700 });
       const path = join(dir, `${crypto.randomUUID().slice(0, 8)}-${safe}`);
-      await Bun.write(path, file, { mode: 0o600 });
+      await Bun.write(path, file);
+      await chmod(path, 0o600); // Bun.write's `mode` option left it 0644
       return new Response(JSON.stringify({ path }), {
         headers: { ...secure, "content-type": "application/json" },
       });
@@ -928,6 +982,15 @@ Bun.serve({
               );
             await refreshState(s);
           }
+        } else if (m.t === "termOpen") {
+          termOpen(ws, m);
+        } else if (m.t === "termIn") {
+          if (typeof m.data === "string" && m.data.length <= 1_000_000)
+            terms.get(ws)?.get(m.id)?.terminal?.write(m.data);
+        } else if (m.t === "termResize") {
+          terms.get(ws)?.get(m.id)?.terminal?.resize(dim(m.cols), dim(m.rows));
+        } else if (m.t === "termClose") {
+          if (typeof m.id === "string") termKill(ws, m.id);
         }
       } catch (e) {
         reply({ t: "error", error: String(e instanceof Error ? e.message : e) });
@@ -935,6 +998,7 @@ Bun.serve({
     },
     close(ws) {
       for (const s of sessions.values()) s.subs.delete(ws);
+      termKill(ws);
     },
   },
 });

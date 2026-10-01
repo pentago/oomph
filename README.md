@@ -1,8 +1,12 @@
 # oomph
 
-A small web client for with [omp](https://github.com/can1357/oh-my-pi), the coding agent, from your browser. You can use it from your laptop, phone or tablet.
+A small web client for [omp](https://github.com/can1357/oh-my-pi), the coding agent, in your browser. You can use it from your laptop, phone, tablet, from a toilet, bus or your bed.
 
 It is an omp plugin. Install it once, and omp can start and stop it for you.
+
+Very much **WIP** but it works decent and will get you places.
+
+![oomph in the browser](static/oomph-web-ui-screenshot.png)
 
 ## What you get
 
@@ -10,8 +14,10 @@ It is an omp plugin. Install it once, and omp can start and stop it for you.
 - New chats in any folder, and pick up any old chat where you left off.
 - Replies appear as they are written, and you can see the agent's tool steps.
 - Switch the model and the thinking level.
+- A terminal at the bottom of the page: click the `>_` button next to the thinking level. It opens a shell in the chat's folder, with tabs (the + button) and a split button to put two terminals side by side. Drag its top edge to make it taller or shorter, or use the arrow at the right to hide it (your terminals keep running). It uses your system's monospace font and the same environment omp was started in.
+- Delete a chat you no longer need: hover it in the sidebar, click the trash icon, then click "Delete?" to confirm. It is removed from omp too, so it is gone from the terminal as well. A chat that is open in an omp window can't be deleted until you close it there.
 - A login page with a password, so only you can use it.
-- The look follows the Claude desktop app: sans interface, serif replies, code in a monospace font. A settings page (bottom of the sidebar) has light/dark mode, a dozen color themes (Claude default, Catppuccin, Tokyo Night, Kanagawa, Gruvbox, Nord and more), separate fonts for the interface, sidebar, replies and code, and a font size slider. Fonts come from Google by default, so the browser needs internet for them; without internet the system fonts are used. Settings are saved per browser.
+- A clean look: A settings page (bottom of the sidebar) has light/dark mode, a dozen popular color themes, separate fonts for the interface, sidebar, replies and code, and a font size slider. Fonts come from Google by default, so the browser needs internet for them; without internet the system fonts are used. Settings are saved per browser.
 
 ## Install
 
@@ -101,6 +107,7 @@ oomph doesn't care which one you pick. Use what you already have.
 oomph can run commands on your computer through the agent. Treat it like a remote login.
 
 - Keep the password secret. `/oomph passwd` changes it and signs everyone out.
+- The terminal is a normal shell running as you, so anyone who can log in to oomph can run anything you can.
 - oomph itself uses plain `http`, which is not encrypted. On `0.0.0.0` that's fine on a private network (Tailscale, WireGuard, home Wi-Fi you trust). Don't open the port to the public internet. If you need access from outside, use a tunnel or web server that gives you `https`.
 - Too many wrong passwords make the login wait longer before the next try.
 
@@ -113,12 +120,14 @@ Everything lives in `~/.config/oomph/`:
 - `server.log`: messages from the last start. Look here if `/oomph start` fails.
 - `pid` and `lifeline.sock`: only there while oomph runs. omp uses them to find oomph and keep it running.
 
+Files you attach in the chat are saved in `~/.local/share/oomph/uploads/` so older chats can still find them. oomph never deletes them; remove files there yourself when you no longer need them.
+
 Your chats are not stored by oomph. They are omp's own chat files in `~/.omp/agent/sessions/`.
 
 ## Troubleshooting
 
 - **"oomph failed to start"**: check `~/.config/oomph/server.log`. The most common reason is that the port is already in use. Pick another one with `omp plugin config set @dzhi/oomph port <number>`.
-- **"bad origin" after login through a web server or tunnel**: your web server must pass the original site name along. Caddy and Tailscale do this by default. For nginx, add `proxy_set_header Host $host;`.
+- **"bad origin" after login through a web server or tunnel**: your web server must pass the original site name along. Caddy and Tailscale do this by default. For nginx, add `proxy_set_header Host $host;`. Note I only access it via Tailscale and haven't actually tested it otherwise.
 - **Changed a setting but nothing happened**: run `/oomph restart`.
 
 ## Update
@@ -152,20 +161,6 @@ scripts/dev.sh test 8799     # or run a separate test copy with password dev-pas
 ```
 
 `dist/` is not kept in git.
-
-To release a new version:
-
-1. Change `version` in `package.json` (for example to `0.2.0`) and commit it.
-2. Tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
-
-GitHub then runs the checks, builds the page and publishes to npm.
-
-First time only, before the steps above can work:
-
-1. Publish once by hand: `npm login` (as `dzhi`), then `bun publish`.
-2. On npmjs.com open `@dzhi/oomph` → Settings → Trusted Publisher → GitHub Actions, and enter owner `pentago`, repository `oomph`, workflow `publish.yml`.
-
-After that, GitHub can publish without any stored npm password or token.
 
 ## Tech stack
 
