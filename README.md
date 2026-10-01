@@ -102,6 +102,10 @@ The `host` setting decides who can reach oomph.
 
 oomph doesn't care which one you pick. Use what you already have.
 
+## Install as an app
+
+Open oomph in Chrome, Edge or Safari and choose "Install" or "Add to Home Screen". It then opens in its own window like a normal app. Browsers only offer this on `https` or `localhost`, so over plain `http` on a LAN or Tailscale address the option won't appear (Tailscale's `tailscale serve` gives you `https`).
+
 ## Staying safe
 
 oomph can run commands on your computer through the agent. Treat it like a remote login.

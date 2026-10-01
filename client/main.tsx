@@ -4,3 +4,4 @@ import { initTheme } from "./theme";
 
 initTheme();
 render(<App />, document.getElementById("app") as HTMLElement);
+navigator.serviceWorker?.register("/sw.js");
