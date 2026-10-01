@@ -1,6 +1,6 @@
 # oomph
 
-A small web client for with [omp](https://github.com/can1357/oh-my-pi), the coding agent, from your browser. You can use it from your laptop, phone or tablet.
+A small web client for [omp](https://github.com/can1357/oh-my-pi), the coding agent, in your browser. You can use it from your laptop, phone or tablet.
 
 It is an omp plugin. Install it once, and omp can start and stop it for you.
 
@@ -13,7 +13,7 @@ It is an omp plugin. Install it once, and omp can start and stop it for you.
 - Replies appear as they are written, and you can see the agent's tool steps.
 - Switch the model and the thinking level.
 - A login page with a password, so only you can use it.
-- The look follows the Claude desktop app: sans interface, serif replies, code in a monospace font. A settings page (bottom of the sidebar) has light/dark mode, a dozen color themes (Claude default, Catppuccin, Tokyo Night, Kanagawa, Gruvbox, Nord and more), separate fonts for the interface, sidebar, replies and code, and a font size slider. Fonts come from Google by default, so the browser needs internet for them; without internet the system fonts are used. Settings are saved per browser.
+- A clean look: A settings page (bottom of the sidebar) has light/dark mode, a dozen popular color themes, separate fonts for the interface, sidebar, replies and code, and a font size slider. Fonts come from Google by default, so the browser needs internet for them; without internet the system fonts are used. Settings are saved per browser.
 
 ## Install
 
@@ -120,7 +120,7 @@ Your chats are not stored by oomph. They are omp's own chat files in `~/.omp/age
 ## Troubleshooting
 
 - **"oomph failed to start"**: check `~/.config/oomph/server.log`. The most common reason is that the port is already in use. Pick another one with `omp plugin config set @dzhi/oomph port <number>`.
-- **"bad origin" after login through a web server or tunnel**: your web server must pass the original site name along. Caddy and Tailscale do this by default. For nginx, add `proxy_set_header Host $host;`.
+- **"bad origin" after login through a web server or tunnel**: your web server must pass the original site name along. Caddy and Tailscale do this by default. For nginx, add `proxy_set_header Host $host;`. Note I only access it via Tailscale and haven't actually tested it otherwise.
 - **Changed a setting but nothing happened**: run `/oomph restart`.
 
 ## Update
@@ -154,20 +154,6 @@ scripts/dev.sh test 8799     # or run a separate test copy with password dev-pas
 ```
 
 `dist/` is not kept in git.
-
-To release a new version:
-
-1. Change `version` in `package.json` (for example to `0.2.0`) and commit it.
-2. Tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
-
-GitHub then runs the checks, builds the page and publishes to npm.
-
-First time only, before the steps above can work:
-
-1. Publish once by hand: `npm login` (as `dzhi`), then `bun publish`.
-2. On npmjs.com open `@dzhi/oomph` → Settings → Trusted Publisher → GitHub Actions, and enter owner `pentago`, repository `oomph`, workflow `publish.yml`.
-
-After that, GitHub can publish without any stored npm password or token.
 
 ## Tech stack
 
