@@ -1,6 +1,6 @@
 {
   "name": "@dzhi/oomph",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Minimal self-hosted web UI for the omp coding agent",
   "type": "module",
   "repository": {
